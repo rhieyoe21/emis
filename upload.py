@@ -331,7 +331,7 @@ def build_files(data):
         'm_level_id': (None, safe_str(data['m_level_id'])),
         'kk_num': (None, safe_str(data['kk_num'])),
         'family_head_name': (None, data['family_head_name']),
-        'upload_kk': (os.path.basename(foto_filename), '', mime_type),
+        'upload_kk': (f"{full_name}-kk.jpg", '', mime_type),
 
 
         # father
@@ -354,7 +354,7 @@ def build_files(data):
         'father_postal_code': (None, safe_str(data['postal_code_num'])),
         'father_phone_number': (None, father_phone_number),
         'father_have_phone_number': (None,father_have_phone),
-        'father_kk_file': (os.path.basename(foto_filename), '', mime_type),
+        'father_kk_file': (f"{full_name}-kk.jpg", '', mime_type),
 
         # mother
         'mother_residence': (None, '1'),
@@ -377,7 +377,7 @@ def build_files(data):
         'mother_postal_code': (None, safe_str(data['postal_code_num'])),
         'mother_phone_number': (None,mother_phone_number),
         'mother_have_phone_number': (None, mother_have_phone),
-        'mother_kk_file': (os.path.basename(foto_filename), '', mime_type),
+        'mother_kk_file': (f"{full_name}-kk.jpg", '', mime_type),
 
         # wali
         'wali': (None, 'Sama dengan ayah kandung'),
@@ -400,7 +400,7 @@ def build_files(data):
         'wali_postal_code': (None, safe_str(data['postal_code_num'])),
         'wali_phone_number': (None, ''),   # kosong
         'wali_have_phone_number': (None, 'false'),
-        'wali_kk_file': (os.path.basename(foto_filename), '', mime_type),
+        'wali_kk_file': (f"{full_name}-kk.jpg", '', mime_type),
 
         # umum
         'm_religion_id': (None, '1'), # Agama Islam
