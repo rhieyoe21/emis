@@ -98,16 +98,31 @@ def parse_api_response(response, full_name):
     except:
         return f"❌ {full_name} | Status {status} | Raw: {response.text[:200]}"
 
-def upload_data(files, headers, url, max_retry=3):
+def upload_data(files, headers, url, max_retry=3, timeout=120):
+    last_error = None
     for attempt in range(max_retry):
         try:
             m = MultipartEncoder(fields=files)
             headers['Content-Type'] = m.content_type
-            response = requests.post(url, headers=headers, data=m)
+            response = requests.post(url, headers=headers, data=m, timeout=timeout)
             return response
-        except Exception as e:
-            print(f"⚠️ Gagal upload (percobaan {attempt+1}): {e}")
+        except requests.exceptions.Timeout as e:
+            last_error = f"Timeout setelah {timeout} detik: {str(e)}"
+            print(f"⚠️ Upload timeout (percobaan {attempt+1}/{max_retry}): {timeout}s")
+            tulis_log(f"⚠️ Timeout percobaan {attempt+1}: {str(e)}")
             time.sleep(2)
+        except requests.exceptions.ConnectionError as e:
+            last_error = f"Connection error: {str(e)}"
+            print(f"⚠️ Connection error (percobaan {attempt+1}/{max_retry}): {str(e)[:100]}")
+            tulis_log(f"⚠️ Connection error percobaan {attempt+1}: {str(e)[:200]}")
+            time.sleep(2)
+        except Exception as e:
+            last_error = f"Error: {str(e)}"
+            print(f"⚠️ Gagal upload (percobaan {attempt+1}/{max_retry}): {str(e)[:100]}")
+            tulis_log(f"⚠️ Exception percobaan {attempt+1}: {type(e).__name__}: {str(e)[:200]}")
+            time.sleep(2)
+    
+    tulis_log(f"❌ Gagal upload setelah {max_retry} percobaan. Error terakhir: {last_error}")
     return None
 
 def validasi_usia_masuk(birth_date_str, admission_date_str):
@@ -609,11 +624,19 @@ def main():
     format_phone_numbers_in_excel()
     
     headers = {
-        'accept': 'application/json',
-        'authorization': f'Bearer {token}',
-        'origin': 'https://emis.kemenag.go.id',
-        'referer': 'https://emis.kemenag.go.id/',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Accept': 'application/json',
+        'Accept-Language': 'id,en-US;q=0.9,en;q=0.8,ms;q=0.7',
+        'Authorization': f'Bearer {token}',
+        'Connection': 'keep-alive',
+        'Origin': 'https://emis.kemenag.go.id',
+        'Referer': 'https://emis.kemenag.go.id/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0',
+        'sec-ch-ua': '"Not;A=Brand";v="8", "Chromium";v="150", "Microsoft Edge";v="150"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
     }
 
     # ✅ Validasi format admission_date
