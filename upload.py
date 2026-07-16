@@ -606,7 +606,7 @@ def main():
     
     if "upload_timestamp" not in [col.lower() for col in df.columns]:
         ws.cell(row=1, column=ws.max_column + 1).value = "upload_timestamp"
-        col_timestamp_index = df.max_column + 1
+        col_timestamp_index = ws.max_column
     
     jumlah_sukses = 0
     jumlah_gagal = 0
