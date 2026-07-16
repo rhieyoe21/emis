@@ -6,7 +6,7 @@ from openpyxl import load_workbook # type: ignore
 from config import EXCEL_FILE, LOG_FILE, API_URL, DELAY, token, admission_date
 from utils import (
     safe_str, backup_excel, tulis_log, update_status_excel,
-    safe_save_workbook
+    safe_save_workbook, is_excel_locked
 )
 from postal import autofill_postal_codes_pre_upload, format_phone_numbers_in_excel, format_birthdates_in_excel
 from api import build_files, upload_data, parse_api_response
@@ -23,6 +23,11 @@ def tampilkan_ringkasan(data):
     print(f"File Kartu Keluarga : {str(data['full_name']).strip()}.jpg")
 
 def main():
+    while is_excel_locked(EXCEL_FILE):
+        print(f"\n⚠️ File '{EXCEL_FILE}' sedang terbuka di program lain (misal: Microsoft Excel).")
+        print("Silakan tutup file tersebut terlebih dahulu agar sistem dapat menyimpan status upload.")
+        input("Tekan Enter untuk mencoba kembali setelah file ditutup...")
+
     try:
         backup_excel(EXCEL_FILE)
     except Exception as e:

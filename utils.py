@@ -14,6 +14,16 @@ def safe_str(val):
         val_str = val_str[1:]
     return val_str
 
+def is_excel_locked(filepath):
+    if not os.path.exists(filepath):
+        return False
+    try:
+        f = open(filepath, 'r+b')
+        f.close()
+        return False
+    except IOError:
+        return True
+
 def backup_excel(source_path):
     backup_folder = "backup"
     if not os.path.exists(backup_folder):
