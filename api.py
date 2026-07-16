@@ -116,11 +116,13 @@ def build_files(data):
         print(f"❌ Tanggal lahir siswa tidak valid: {full_name} | birth_date: {data.get('birth_date')}")
         return None
 
-    if not valid_father:
+    father_life_status = safe_str(data.get('father_m_life_status_id'))
+    if father_life_status == "1" and not valid_father:
         print(f"❌ Tanggal lahir ayah tidak valid: {full_name} | father_birth_date: {data.get('father_birth_date')}")
         return None
 
-    if not valid_mother:
+    mother_life_status = safe_str(data.get('mother_m_life_status_id'))
+    if mother_life_status == "1" and not valid_mother:
         print(f"❌ Tanggal lahir ibu tidak valid: {full_name} | mother_birth_date: {data.get('mother_birth_date')}")
         return None
 
