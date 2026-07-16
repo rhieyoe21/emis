@@ -130,6 +130,38 @@ def build_files(data):
     if not siblings_num or siblings_num.lower() == 'nan':
         siblings_num = "0"
 
+    is_father_alive = (father_life_status == "1")
+    
+    if not is_father_alive:
+        residence_status = "19"
+    else:
+        residence_status = safe_str(data.get('m_residence_status_id'))
+        
+    if is_father_alive:
+        wali_relation = "Sama dengan ayah kandung"
+        wali_full_name = data.get('father_full_name', '')
+        wali_life_status = safe_str(data.get('father_m_life_status_id'))
+        wali_nik = safe_str(data.get('father_nik'))
+        wali_birth_place = data.get('father_birth_place', '')
+        wali_birth_date = father_birth_date
+        wali_last_education = safe_str(data.get('father_m_last_education_id'))
+        wali_job = safe_str(data.get('father_m_job_id'))
+        wali_income = safe_str(data.get('father_m_average_income_per_month_id'))
+        wali_phone = father_phone_number
+        wali_have_phone = father_have_phone
+    else:
+        wali_relation = "Sama dengan ibu kandung"
+        wali_full_name = data.get('mother_full_name', '')
+        wali_life_status = safe_str(data.get('mother_m_life_status_id'))
+        wali_nik = safe_str(data.get('mother_nik'))
+        wali_birth_place = data.get('mother_birth_place', '')
+        wali_birth_date = mother_birth_date
+        wali_last_education = safe_str(data.get('mother_m_last_education_id'))
+        wali_job = safe_str(data.get('mother_m_job_id'))
+        wali_income = safe_str(data.get('mother_m_average_income_per_month_id'))
+        wali_phone = mother_phone_number
+        wali_have_phone = mother_have_phone
+
     files = {
         'full_name': (None, data['full_name']),
         'nationality': (None, 'wni'),
@@ -141,7 +173,7 @@ def build_files(data):
         'birth_date': (None, birth_date),
         'siblings_num': (None, siblings_num),
         'child_of_num': (None, safe_str(data['child_of_num'])),
-        'm_residence_status_id': (None, safe_str(data['m_residence_status_id'])),
+        'm_residence_status_id': (None, residence_status),
         'm_province_id': (None, safe_str(data['m_province_id'])),
         'm_city_id': (None, safe_str(data['m_city_id'])),
         'm_district_id': (None, safe_str(data['m_district_id'])),
@@ -200,26 +232,26 @@ def build_files(data):
         'mother_kk_file': (f"{full_name}-kk.jpg", kk_data, mime_type),
 
         # wali
-        'wali': (None, 'Sama dengan ayah kandung'),
-        'wali_full_name': (None, data['father_full_name']),
-        'wali_m_life_status_id': (None, safe_str(data['father_m_life_status_id'])),
+        'wali': (None, wali_relation),
+        'wali_full_name': (None, wali_full_name),
+        'wali_m_life_status_id': (None, wali_life_status),
         'wali_nationality': (None, 'wni'),
-        'wali_nik': (None, safe_str(data['father_nik'])),
-        'wali_birth_place': (None, data['father_birth_place']),
-        'wali_birth_date': (None, father_birth_date),
-        'wali_m_last_education_id': (None, safe_str(data['father_m_last_education_id'])),
-        'wali_m_job_id': (None, safe_str(data['father_m_job_id'])),
-        'wali_m_average_income_per_month_id': (None, safe_str(data['father_m_average_income_per_month_id'])),
+        'wali_nik': (None, wali_nik),
+        'wali_birth_place': (None, wali_birth_place),
+        'wali_birth_date': (None, wali_birth_date),
+        'wali_m_last_education_id': (None, wali_last_education),
+        'wali_m_job_id': (None, wali_job),
+        'wali_m_average_income_per_month_id': (None, wali_income),
         'wali_domicile': (None, 'Dalam Negeri'),
-        'wali_m_residence_status_id': (None, safe_str(data['m_residence_status_id'])),
+        'wali_m_residence_status_id': (None, residence_status),
         'wali_m_province_id': (None, safe_str(data['m_province_id'])),
         'wali_m_city_id': (None, safe_str(data['m_city_id'])),
         'wali_m_district_id': (None, safe_str(data['m_district_id'])),
         'wali_m_sub_district_id': (None, safe_str(data['m_subdistrict_id'])),
         'wali_address': (None, data['address']),
         'wali_postal_code': (None, safe_str(data['postal_code_num'])),
-        'wali_phone_number': (None, ''),   # kosong
-        'wali_have_phone_number': (None, 'false'),
+        'wali_phone_number': (None, wali_phone),
+        'wali_have_phone_number': (None, wali_have_phone),
         'wali_kk_file': (f"{full_name}-kk.jpg", kk_data, mime_type),
 
         # umum
