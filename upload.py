@@ -679,14 +679,14 @@ def main():
     print(f"⏭️ Dilewati (tanggal)  : {jumlah_dilewati_tanggal}")
     print(f"⏭️ Dilewati (NIK salah): {jumlah_dilewati_nik}")
     print(f"⏭️ Dilewati (duplikat) : {jumlah_dilewati_duplikat}")
-
-tulis_log("📊 Ringkasan Harian Upload:" )
-tulis_log(f"✅ Berhasil upload     : {jumlah_sukses}")
-tulis_log(f"❌ Gagal upload        : {jumlah_gagal}")
-tulis_log(f"⏭️ Dilewati (manual)   : {jumlah_dilewati}")
-tulis_log(f"⏭️ Dilewati (tanggal)  : {jumlah_dilewati_tanggal}")
-tulis_log(f"⏭️ Dilewati (NIK salah): {jumlah_dilewati_nik}")
-tulis_log(f"⏭️ Dilewati (duplikat) : {jumlah_dilewati_duplikat}")
+    
+    tulis_log("📊 Ringkasan Harian Upload:" )
+    tulis_log(f"✅ Berhasil upload     : {jumlah_sukses}")
+    tulis_log(f"❌ Gagal upload        : {jumlah_gagal}")
+    tulis_log(f"⏭️ Dilewati (manual)   : {jumlah_dilewati}")
+    tulis_log(f"⏭️ Dilewati (tanggal)  : {jumlah_dilewati_tanggal}")
+    tulis_log(f"⏭️ Dilewati (NIK salah): {jumlah_dilewati_nik}")
+    tulis_log(f"⏭️ Dilewati (duplikat) : {jumlah_dilewati_duplikat}")
 
 if __name__ == "__main__":
     main()
