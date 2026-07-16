@@ -65,6 +65,39 @@ def update_status_excel(ws, nik, col_nik_index, col_status_index, col_timestamp_
             return True
     return False
 
+def parse_api_response(response, full_name):
+    """Parse API response dan extract error details"""
+    if not response:
+        return f"❌ {full_name} | Tidak ada response dari server (timeout/network error)"
+    
+    status = response.status_code
+    
+    try:
+        data = response.json()
+        
+        if status == 200:
+            message = data.get('message', 'Success')
+            return f"✅ {full_name} | Status {status} | {message}"
+        
+        else:
+            error_msg = data.get('message', '')
+            errors = data.get('errors', {})
+            
+            if errors:
+                error_details = []
+                for field, messages in errors.items():
+                    if isinstance(messages, list):
+                        error_details.append(f"{field}: {', '.join(messages)}")
+                    else:
+                        error_details.append(f"{field}: {messages}")
+                error_text = " | ".join(error_details)
+                return f"❌ {full_name} | Status {status} | {error_msg} | {error_text}"
+            else:
+                return f"❌ {full_name} | Status {status} | {error_msg}"
+    
+    except:
+        return f"❌ {full_name} | Status {status} | Raw: {response.text[:200]}"
+
 def upload_data(files, headers, url, max_retry=3):
     for attempt in range(max_retry):
         try:
@@ -658,17 +691,15 @@ def main():
 
         response = upload_data(files, headers, API_URL)
         full_name = row.get("full_name", "❓ Nama tidak ditemukan")
-
+        
+        log_message = parse_api_response(response, full_name)
+        tulis_log(log_message)
+        
         if response and response.status_code == 200:
-            tulis_log(f"✅ {full_name} | Status {response.status_code} | {response.text}")
             jumlah_sukses += 1
             if update_status_excel(ws, nik, col_nik_index, col_status_index, col_timestamp_index):
                 safe_save_workbook(wb, EXCEL_FILE)
-        elif response:
-            tulis_log(f"⚠️ {full_name} | Status {response.status_code} | {response.text}")
-            jumlah_gagal += 1
         else:
-            tulis_log(f"❌ {full_name} | Gagal upload setelah beberapa percobaan.")
             jumlah_gagal += 1
 
         if foto_file:
