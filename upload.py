@@ -8,6 +8,7 @@ from datetime import datetime
 from shutil import copyfile
 from openpyxl import load_workbook # type: ignore
 from requests_toolbelt.multipart.encoder import MultipartEncoder # type: ignore
+from bs4 import BeautifulSoup # type: ignore
 
 # ====== KONFIGURASI ======
 EXCEL_FILE = "data_siswa.xlsx"
@@ -354,6 +355,108 @@ def safe_save_workbook(wb, path, max_retry=3):
             time.sleep(2)
     print("❌ Gagal menyimpan Excel setelah beberapa percobaan.")
     return False
+
+def format_kode_wilayah_for_postal(kode):
+    """Format kode wilayah untuk pencarian kode pos"""
+    kode = str(kode).strip().replace(".", "")
+    if len(kode) >= 12:
+        return f"{kode[0:2]}.{kode[2:4]}.{kode[4:6]}.{kode[6:10]}"
+    elif len(kode) == 10:
+        return f"{kode[0:2]}.{kode[2:4]}.{kode[4:6]}.{kode[6:10]}"
+    elif len(kode) == 6:
+        return f"{kode[0:2]}.{kode[2:4]}.{kode[4:6]}"
+    elif len(kode) == 4:
+        return f"{kode[0:2]}.{kode[2:4]}"
+    else:
+        return kode
+
+def cari_kodepos_web(kode_wilayah):
+    """Cari kode pos dengan scraping web"""
+    try:
+        kode_bertitik = format_kode_wilayah_for_postal(kode_wilayah)
+        url = f"https://kodepos.nomor.net/_kodepos.php?_i=cari-kodepos&jobs={kode_bertitik}"
+        
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            tables = soup.find_all('table')
+            
+            for table in tables:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cols = row.find_all(['td', 'th'])
+                    
+                    for i in range(len(cols) - 6):
+                        col_text = cols[i].get_text(strip=True)
+                        
+                        if col_text.isdigit() and len(col_text) == 5:
+                            try:
+                                kode_wil = cols[i+2].get_text(strip=True) if i+2 < len(cols) else ''
+                                if kode_wil and '.' in kode_wil:
+                                    return col_text
+                            except:
+                                pass
+        return None
+    except:
+        return None
+
+def autofill_postal_codes_pre_upload():
+    """Auto-fill kode pos sebelum upload"""
+    print("\n" + "="*60)
+    print("AUTO-FILL KODE POS")
+    print("="*60)
+    
+    df = pd.read_excel(EXCEL_FILE)
+    df['postal_code_num'] = df['postal_code_num'].astype(str).str.strip()
+    
+    rows_to_update = df[(df['postal_code_num'] == '') | (df['postal_code_num'] == 'nan') | (df['postal_code_num'].isna())]
+    
+    if len(rows_to_update) == 0:
+        print("✅ Semua kode pos sudah terisi")
+        print("="*60 + "\n")
+        return
+    
+    print(f"📋 Ditemukan {len(rows_to_update)} baris dengan kode pos kosong")
+    
+    lanjut = input("➡️ Lanjutkan auto-fill kode pos? (Y/N): ").strip().lower()
+    if lanjut != 'y':
+        print("⏭️ Auto-fill dibatalkan, lanjut ke upload")
+        print("="*60 + "\n")
+        return
+    
+    updated_count = 0
+    
+    for idx, row in rows_to_update.iterrows():
+        full_name = row.get('full_name', 'N/A')
+        m_subdistrict_id = str(row.get('m_subdistrict_id', '')).strip()
+        
+        if not m_subdistrict_id or m_subdistrict_id == 'nan':
+            continue
+        
+        print(f"[PROSES] {full_name} - Kode wilayah: {m_subdistrict_id}", end=" ")
+        
+        kode_pos = cari_kodepos_web(m_subdistrict_id)
+        
+        if kode_pos:
+            df.at[idx, 'postal_code_num'] = kode_pos
+            print(f"✅ Kode pos: {kode_pos}")
+            updated_count += 1
+        else:
+            print("❌ Tidak ditemukan")
+        
+        time.sleep(1)
+    
+    if updated_count > 0:
+        df.to_excel(EXCEL_FILE, index=False)
+        print(f"\n✅ Berhasil update {updated_count} kode pos")
+        tulis_log(f"Auto-fill kode pos: {updated_count} baris berhasil diupdate")
+    else:
+        print("\n⚠️ Tidak ada kode pos yang berhasil diupdate")
+    
+    print("="*60 + "\n")
+
 # ====== MAIN PROSES ======
 def main():
     try:
@@ -366,6 +469,8 @@ def main():
     if not token:
         print("❌ Token tidak ditemukan di file token.txt.")
         return
+    
+    autofill_postal_codes_pre_upload()
     
     headers = {
         'accept': 'application/json',

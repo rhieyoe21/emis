@@ -24,6 +24,12 @@ pip install pandas openpyxl requests requests-toolbelt beautifulsoup4
 
 ## upload.py behavior
 
+- **Auto-fill kode pos** - runs before main upload process:
+  - Checks for empty `postal_code_num` fields
+  - Looks up postal codes based on `m_subdistrict_id`
+  - Prompts user for confirmation (Y/N)
+  - Updates Excel file with found postal codes
+  - 1-second delay between lookups
 - **Kartu keluarga (family card) handling** - supports two modes:
   - **Local files**: Place `{full_name}.jpg` in `kartu_keluarga/` folder
   - **URLs**: Add `kartu_keluarga` column in Excel with image/PDF URLs (http:// or https://)
