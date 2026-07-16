@@ -5,7 +5,7 @@ import re
 from bs4 import BeautifulSoup # type: ignore
 from openpyxl import load_workbook # type: ignore
 from config import EXCEL_FILE
-from utils import tulis_log, format_kode_wilayah_for_postal
+from utils import tulis_log, format_kode_wilayah_for_postal, parse_date_safe
 
 def cari_kodepos_web(kode_wilayah):
     """Cari kode pos dengan scraping web"""
@@ -223,8 +223,8 @@ def format_birthdates_in_excel():
                     val_str = str(cell.value).strip()
                     if val_str and val_str.lower() != 'nan':
                         try:
-                            # Parse dengan pandas agar fleksibel
-                            parsed = pd.to_datetime(cell.value, errors='raise')
+                            # Parse dengan parse_date_safe agar fleksibel
+                            parsed = parse_date_safe(cell.value)
                             if pd.notna(parsed):
                                 new_date = parsed.to_pydatetime().date()
                                 # Cek jika ada perubahan nilai atau tipe/format

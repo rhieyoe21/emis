@@ -79,10 +79,44 @@ def format_nomor_hp(nomor):
     # Format tidak valid
     return "", "false"
 
+def parse_date_safe(val):
+    if pd.isna(val) or val is None:
+        return None
+    
+    val_str = str(val).strip()
+    if not val_str or val_str.lower() in ('nan', 'nat', ''):
+        return None
+        
+    # Cek jika numerik (untuk menangani serial date Excel)
+    if isinstance(val, (int, float)):
+        # Excel serial date limit (1900 s.d 2100)
+        if 1 <= val <= 100000:
+            return pd.to_datetime(val, unit='D', origin='1899-12-30')
+    else:
+        # Jika berupa string angka murni (misal "44333")
+        if val_str.isdigit():
+            num = int(val_str)
+            if 1 <= num <= 100000:
+                return pd.to_datetime(num, unit='D', origin='1899-12-30')
+        # Jika berupa string angka float murni (misal "44333.0")
+        elif re.match(r"^\d+\.\d+$", val_str):
+            try:
+                num = float(val_str)
+                if 1 <= num <= 100000:
+                    return pd.to_datetime(num, unit='D', origin='1899-12-30')
+            except:
+                pass
+                
+    # Parse biasa
+    try:
+        return pd.to_datetime(val, errors='coerce')
+    except:
+        return None
+
 def format_tanggal(tanggal_str, min_year=1950, max_year=None):
     try:
-        tanggal = pd.to_datetime(tanggal_str, errors='coerce')
-        if pd.isna(tanggal):
+        tanggal = parse_date_safe(tanggal_str)
+        if tanggal is None or pd.isna(tanggal):
             return "", False
         tahun = tanggal.year
         batas_atas = max_year if max_year else datetime.now().year
@@ -94,9 +128,9 @@ def format_tanggal(tanggal_str, min_year=1950, max_year=None):
 
 def validasi_usia_masuk(birth_date_str, admission_date_str):
     try:
-        birth_date = pd.to_datetime(birth_date_str, errors='coerce')
-        admission_date = pd.to_datetime(admission_date_str, errors='coerce')
-        if pd.isna(birth_date) or pd.isna(admission_date):
+        birth_date = parse_date_safe(birth_date_str)
+        admission_date = parse_date_safe(admission_date_str)
+        if birth_date is None or admission_date is None or pd.isna(birth_date) or pd.isna(admission_date):
             return False
         return birth_date <= admission_date
     except:
