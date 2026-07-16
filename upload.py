@@ -35,7 +35,11 @@ def load_config(config_path="config.txt"):
     return config
 
 def backup_excel(source_path):
-    backup_name = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    backup_folder = "backup"
+    if not os.path.exists(backup_folder):
+        os.makedirs(backup_folder)
+    
+    backup_name = os.path.join(backup_folder, f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
     if os.path.exists(source_path):
         copyfile(source_path, backup_name)
         print(f"📁 Backup dibuat: {backup_name}")

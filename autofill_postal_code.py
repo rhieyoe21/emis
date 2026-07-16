@@ -16,7 +16,11 @@ def log_message(message):
         f.write(line + "\n")
 
 def backup_excel(source_path):
-    backup_name = f"backup_postal_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    backup_folder = "backup"
+    if not os.path.exists(backup_folder):
+        os.makedirs(backup_folder)
+    
+    backup_name = os.path.join(backup_folder, f"backup_postal_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
     copyfile(source_path, backup_name)
     log_message(f"Backup dibuat: {backup_name}")
     return backup_name
