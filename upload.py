@@ -100,11 +100,17 @@ def parse_api_response(response, full_name):
 
 def upload_data(files, headers, url, max_retry=3, timeout=120):
     last_error = None
+    
+    # Buat copy headers untuk menghindari modifikasi global
+    upload_headers = headers.copy()
+    # Hapus Content-Type dari headers, biar requests.post set otomatis untuk multipart
+    if 'Content-Type' in upload_headers:
+        del upload_headers['Content-Type']
+    
     for attempt in range(max_retry):
         try:
-            m = MultipartEncoder(fields=files)
-            headers['Content-Type'] = m.content_type
-            response = requests.post(url, headers=headers, data=m, timeout=timeout)
+            # Gunakan files parameter langsung tanpa MultipartEncoder seperti contoh response200.py
+            response = requests.post(url, headers=upload_headers, files=files, timeout=timeout)
             return response
         except requests.exceptions.Timeout as e:
             last_error = f"Timeout setelah {timeout} detik: {str(e)}"
