@@ -408,14 +408,29 @@ def autofill_postal_codes_pre_upload():
     print("AUTO-FILL KODE POS")
     print("="*60)
     
-    df = pd.read_excel(EXCEL_FILE)
-    df['postal_code_num'] = df['postal_code_num'].astype(str).str.strip()
+    wb = load_workbook(EXCEL_FILE)
+    ws = wb.active
     
-    rows_to_update = df[(df['postal_code_num'] == '') | (df['postal_code_num'] == 'nan') | (df['postal_code_num'].isna())]
+    headers = [cell.value for cell in ws[1]]
+    postal_col_idx = headers.index('postal_code_num') + 1 if 'postal_code_num' in headers else None
+    subdistrict_col_idx = headers.index('m_subdistrict_id') + 1 if 'm_subdistrict_id' in headers else None
+    fullname_col_idx = headers.index('full_name') + 1 if 'full_name' in headers else None
+    
+    if not postal_col_idx or not subdistrict_col_idx:
+        print("❌ Kolom yang diperlukan tidak ditemukan")
+        print("="*60 + "\n")
+        return
+    
+    rows_to_update = []
+    for row_idx in range(2, ws.max_row + 1):
+        postal_val = ws.cell(row_idx, postal_col_idx).value
+        if postal_val is None or str(postal_val).strip() == '':
+            rows_to_update.append(row_idx)
     
     if len(rows_to_update) == 0:
         print("✅ Semua kode pos sudah terisi")
         print("="*60 + "\n")
+        wb.close()
         return
     
     print(f"📋 Ditemukan {len(rows_to_update)} baris dengan kode pos kosong")
@@ -424,23 +439,27 @@ def autofill_postal_codes_pre_upload():
     if lanjut != 'y':
         print("⏭️ Auto-fill dibatalkan, lanjut ke upload")
         print("="*60 + "\n")
+        wb.close()
         return
     
     updated_count = 0
     
-    for idx, row in rows_to_update.iterrows():
-        full_name = row.get('full_name', 'N/A')
-        m_subdistrict_id = str(row.get('m_subdistrict_id', '')).strip()
+    for row_idx in rows_to_update:
+        full_name = ws.cell(row_idx, fullname_col_idx).value if fullname_col_idx else 'N/A'
+        m_subdistrict_id = ws.cell(row_idx, subdistrict_col_idx).value
         
-        if not m_subdistrict_id or m_subdistrict_id == 'nan':
+        if not m_subdistrict_id:
             continue
         
-        print(f"[PROSES] {full_name} - Kode wilayah: {m_subdistrict_id}", end=" ")
+        m_subdistrict_id_str = str(m_subdistrict_id).strip()
         
-        kode_pos = cari_kodepos_web(m_subdistrict_id)
+        print(f"[PROSES] {full_name} - Kode wilayah: {m_subdistrict_id_str}", end=" ")
+        
+        kode_pos = cari_kodepos_web(m_subdistrict_id_str)
         
         if kode_pos:
-            df.at[idx, 'postal_code_num'] = kode_pos
+            ws.cell(row_idx, postal_col_idx).value = kode_pos
+            ws.cell(row_idx, postal_col_idx).number_format = '0'
             print(f"✅ Kode pos: {kode_pos}")
             updated_count += 1
         else:
@@ -449,12 +468,88 @@ def autofill_postal_codes_pre_upload():
         time.sleep(1)
     
     if updated_count > 0:
-        df.to_excel(EXCEL_FILE, index=False)
+        wb.save(EXCEL_FILE)
         print(f"\n✅ Berhasil update {updated_count} kode pos")
         tulis_log(f"Auto-fill kode pos: {updated_count} baris berhasil diupdate")
     else:
         print("\n⚠️ Tidak ada kode pos yang berhasil diupdate")
     
+    wb.close()
+    print("="*60 + "\n")
+
+def format_phone_numbers_in_excel():
+    """Format nomor telepon ayah dan ibu ke format 62xxx di Excel"""
+    print("\n" + "="*60)
+    print("FORMAT NOMOR TELEPON")
+    print("="*60)
+    
+    wb = load_workbook(EXCEL_FILE)
+    ws = wb.active
+    
+    headers = [cell.value for cell in ws[1]]
+    father_phone_idx = headers.index('father_phone_number') + 1 if 'father_phone_number' in headers else None
+    mother_phone_idx = headers.index('mother_phone_number') + 1 if 'mother_phone_number' in headers else None
+    fullname_col_idx = headers.index('full_name') + 1 if 'full_name' in headers else None
+    
+    if not father_phone_idx and not mother_phone_idx:
+        print("❌ Kolom nomor telepon tidak ditemukan")
+        print("="*60 + "\n")
+        wb.close()
+        return
+    
+    updated_count = 0
+    
+    for row_idx in range(2, ws.max_row + 1):
+        full_name = ws.cell(row_idx, fullname_col_idx).value if fullname_col_idx else 'N/A'
+        
+        if father_phone_idx:
+            father_phone = ws.cell(row_idx, father_phone_idx).value
+            if father_phone:
+                nomor_str = str(father_phone).strip()
+                nomor_clean = re.sub(r"[^\d]", "", nomor_str)
+                
+                if nomor_clean:
+                    if re.match(r"^62\d{8,}$", nomor_clean):
+                        formatted = nomor_clean
+                    elif re.match(r"^0\d{8,}$", nomor_clean):
+                        formatted = "62" + nomor_clean[1:]
+                        ws.cell(row_idx, father_phone_idx).value = formatted
+                        updated_count += 1
+                        print(f"✅ {full_name} - Ayah: {nomor_str} -> {formatted}")
+                    elif re.match(r"^8\d{8,}$", nomor_clean):
+                        formatted = "62" + nomor_clean
+                        ws.cell(row_idx, father_phone_idx).value = formatted
+                        updated_count += 1
+                        print(f"✅ {full_name} - Ayah: {nomor_str} -> {formatted}")
+        
+        if mother_phone_idx:
+            mother_phone = ws.cell(row_idx, mother_phone_idx).value
+            if mother_phone:
+                nomor_str = str(mother_phone).strip()
+                nomor_clean = re.sub(r"[^\d]", "", nomor_str)
+                
+                if nomor_clean:
+                    if re.match(r"^62\d{8,}$", nomor_clean):
+                        formatted = nomor_clean
+                    elif re.match(r"^0\d{8,}$", nomor_clean):
+                        formatted = "62" + nomor_clean[1:]
+                        ws.cell(row_idx, mother_phone_idx).value = formatted
+                        updated_count += 1
+                        print(f"✅ {full_name} - Ibu: {nomor_str} -> {formatted}")
+                    elif re.match(r"^8\d{8,}$", nomor_clean):
+                        formatted = "62" + nomor_clean
+                        ws.cell(row_idx, mother_phone_idx).value = formatted
+                        updated_count += 1
+                        print(f"✅ {full_name} - Ibu: {nomor_str} -> {formatted}")
+    
+    if updated_count > 0:
+        wb.save(EXCEL_FILE)
+        print(f"\n✅ Berhasil format {updated_count} nomor telepon")
+        tulis_log(f"Format nomor telepon: {updated_count} nomor berhasil diupdate")
+    else:
+        print("\n✅ Semua nomor telepon sudah dalam format yang benar")
+    
+    wb.close()
     print("="*60 + "\n")
 
 # ====== MAIN PROSES ======
@@ -471,6 +566,7 @@ def main():
         return
     
     autofill_postal_codes_pre_upload()
+    format_phone_numbers_in_excel()
     
     headers = {
         'accept': 'application/json',
