@@ -8,6 +8,8 @@ from config import LOG_FILE
 
 def safe_str(val):
     val_str = str(val).strip() if pd.notna(val) else ""
+    if val_str.endswith(".0"):
+        val_str = val_str[:-2]
     if val_str.startswith("'"):
         val_str = val_str[1:]
     return val_str
