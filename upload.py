@@ -20,7 +20,10 @@ DELAY = 3
 
 # ====== UTILITAS ======
 def safe_str(val):
-    return str(val).strip() if pd.notna(val) else ""
+    val_str = str(val).strip() if pd.notna(val) else ""
+    if val_str.startswith("'"):
+        val_str = val_str[1:]
+    return val_str
 def load_config(config_path="config.txt"):
     config = {}
     if os.path.exists(config_path):
