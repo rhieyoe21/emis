@@ -3,3 +3,8 @@ kartu_keluarga/
 data_siswa.xlsx
 config.txt
 readme.txt
+backup/
+AcademicYears/
+__pycache__/
+*.pyc
+log_*
