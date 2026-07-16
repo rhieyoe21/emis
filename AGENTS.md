@@ -4,13 +4,15 @@
 
 Install dependencies:
 ```
-pip install pandas openpyxl requests requests-toolbelt
+pip install pandas openpyxl requests requests-toolbelt beautifulsoup4
 ```
 
 ## Running the application
 
 - `python upload.py` - Upload student data to EMIS API
 - `python kode_wilayah.py` - Interactive region code lookup tool
+- `python autofill_postal_code.py` - Auto-fill postal codes based on m_subdistrict_id
+- `python test_kodepos.py` - Test postal code lookup for a specific region code
 
 ## Critical files
 

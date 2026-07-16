@@ -18,11 +18,12 @@ A Python tool for uploading student data to the EMIS (Education Management Infor
 - openpyxl
 - requests
 - requests-toolbelt
+- beautifulsoup4
 
 ## Installation
 
 ```bash
-pip install pandas openpyxl requests requests-toolbelt
+pip install pandas openpyxl requests requests-toolbelt beautifulsoup4
 ```
 
 ## Configuration
@@ -47,6 +48,17 @@ python upload.py
 ### Lookup Region Codes
 ```bash
 python kode_wilayah.py
+```
+
+### Auto-fill Postal Codes
+```bash
+python autofill_postal_code.py
+```
+Automatically fills empty `postal_code_num` column in `data_siswa.xlsx` based on `m_subdistrict_id` using kodepos.nomor.net web scraping.
+
+### Test Postal Code Lookup
+```bash
+python test_kodepos.py
 ```
 
 ## Family Card (Kartu Keluarga) Options
