@@ -177,10 +177,21 @@ def format_tanggal(tanggal_str, min_year=1950, max_year=None):
 
 def download_file_from_url(url, full_name):
     try:
-        response = requests.get(url, timeout=30)
+        print(f"📥 Downloading kartu keluarga dari URL...")
+        tulis_log(f"Download KK dari URL: {url[:100]}")
+        
+        response = requests.get(url, timeout=30, stream=True)
         if response.status_code != 200:
-            print(f"❌ Gagal download file dari URL: {url} (Status: {response.status_code})")
+            msg = f"Gagal download file dari URL (Status: {response.status_code})"
+            print(f"❌ {msg}")
+            tulis_log(f"❌ {full_name} - {msg}")
             return None, None
+        
+        # Check file size
+        file_size = int(response.headers.get('Content-Length', 0))
+        if file_size > 5 * 1024 * 1024:  # 5MB
+            print(f"⚠️ File besar: {file_size / 1024 / 1024:.2f}MB - upload mungkin lambat")
+            tulis_log(f"⚠️ {full_name} - File size: {file_size / 1024 / 1024:.2f}MB")
         
         content_type = response.headers.get('Content-Type', '').lower()
         
@@ -202,9 +213,19 @@ def download_file_from_url(url, full_name):
         temp_file.write(response.content)
         temp_file.close()
         
+        print(f"✅ File downloaded: {os.path.getsize(temp_file.name) / 1024:.2f}KB")
+        tulis_log(f"✅ {full_name} - Downloaded: {temp_file.name}")
+        
         return temp_file.name, mime_type
+    except requests.exceptions.Timeout:
+        msg = "Timeout saat download file dari URL (>30s)"
+        print(f"❌ {msg}")
+        tulis_log(f"❌ {full_name} - {msg}")
+        return None, None
     except Exception as e:
-        print(f"❌ Error saat download file dari URL: {e}")
+        msg = f"Error saat download file dari URL: {str(e)[:100]}"
+        print(f"❌ {msg}")
+        tulis_log(f"❌ {full_name} - {msg}")
         return None, None
 
 def get_kk_file(full_name, kk_url_or_empty):
