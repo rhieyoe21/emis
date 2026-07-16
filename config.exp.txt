@@ -1,0 +1,9 @@
+# ID Tahun Pelajaran
+academic_year_id = 21
+
+# Tanggal Masuk Siswa
+admission_date = "2026-07-13"
+
+# TOKEN END POINT
+
+token = 
