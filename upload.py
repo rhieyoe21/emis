@@ -579,11 +579,10 @@ def main():
     # ✅ Validasi format admission_date
     try:
         admission_date_parsed = pd.to_datetime(admission_date, errors='raise')
-        admission_date = admission_date_parsed.strftime("%Y-%m-%d")  # pastikan format konsisten
     except Exception as e:
         print(f"❌ Format admission_date tidak valid: {admission_date}")
         tulis_log(f"❌ Format admission_date tidak valid: {admission_date}")
-        exit()  # return untuk lanjutkan proses atau exit() jika ingin hentikan proses
+        return
     
 
     df = pd.read_excel(EXCEL_FILE).fillna("")
