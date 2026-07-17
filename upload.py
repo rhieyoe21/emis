@@ -121,6 +121,17 @@ def main():
                 break
         print(f"❌ Input tidak valid. Masukkan angka antara 1 dan {total_belum_upload}.")
 
+    # Pilihan konfirmasi satu-satu atau otomatis
+    while True:
+        konfirmasi_str = input("➡️ Konfirmasi satu-satu sebelum upload? (Y/N, default Y): ").strip().lower()
+        if not konfirmasi_str or konfirmasi_str == 'y':
+            auto_mode = False
+            break
+        elif konfirmasi_str == 'n':
+            auto_mode = True
+            break
+        print("❌ Input tidak valid. Masukkan Y atau N.")
+
     jumlah_sukses = 0
     jumlah_gagal = 0
     jumlah_dilewati = 0
@@ -158,15 +169,16 @@ def main():
             continue
         files, foto_file, foto_filename, is_temp = files_and_file
         tampilkan_ringkasan(row)
-        lanjut = input("➡️ Lanjutkan upload? (Y/N): ").strip().lower()
-        if lanjut != 'y':
-            print("⏭️ Upload dibatalkan oleh pengguna.")
-            if foto_file:
-                foto_file.close()
-            if is_temp and os.path.exists(foto_filename):
-                os.remove(foto_filename)
-            jumlah_dilewati += 1
-            continue
+        if not auto_mode:
+            lanjut = input("➡️ Lanjutkan upload? (Y/N): ").strip().lower()
+            if lanjut != 'y':
+                print("⏭️ Upload dibatalkan oleh pengguna.")
+                if foto_file:
+                    foto_file.close()
+                if is_temp and os.path.exists(foto_filename):
+                    os.remove(foto_filename)
+                jumlah_dilewati += 1
+                continue
 
         response = upload_data(files, headers, API_URL)
         full_name = row.get("full_name", "❓ Nama tidak ditemukan")
