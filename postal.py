@@ -245,3 +245,68 @@ def format_birthdates_in_excel():
         
     wb.close()
     print("="*60 + "\n")
+
+def clean_address_string(address_str):
+    if not address_str:
+        return ""
+    # 1. Ganti enter, carriage return, dan tab dengan spasi
+    address_str = address_str.replace('\r', ' ').replace('\n', ' ').replace('\t', ' ')
+    
+    # 2. Hanya ijinkan karakter a-zA-Z0-9 .,/:\-()
+    # Menghapus karakter di luar whitelist
+    address_str = re.sub(r'[^a-zA-Z0-9 .,/:\-()]', '', address_str)
+    
+    # 3. Hilangkan spasi berlebih
+    address_str = re.sub(r'\s+', ' ', address_str).strip()
+    
+    return address_str
+
+def clean_addresses_in_excel():
+    """Membersihkan format alamat di Excel (menghilangkan enter/newline dan karakter tidak valid)"""
+    print("\n" + "="*60)
+    print("🧹 MEMULAI PEMBERSIHAN ALAMAT DI EXCEL...")
+    print("="*60)
+    
+    try:
+        wb = load_workbook(EXCEL_FILE)
+    except Exception as e:
+        print(f"❌ Gagal membuka file Excel: {e}")
+        print("="*60 + "\n")
+        return
+        
+    ws = wb.active
+    headers = [cell.value for cell in ws[1]]
+    
+    address_col_idx = headers.index('address') + 1 if 'address' in headers else None
+    fullname_col_idx = headers.index('full_name') + 1 if 'full_name' in headers else None
+    
+    if not address_col_idx:
+        print("❌ Kolom 'address' tidak ditemukan di Excel.")
+        print("="*60 + "\n")
+        wb.close()
+        return
+        
+    updated_count = 0
+    for row_idx in range(2, ws.max_row + 1):
+        cell = ws.cell(row_idx, address_col_idx)
+        full_name = ws.cell(row_idx, fullname_col_idx).value if fullname_col_idx else 'N/A'
+        
+        if cell.value is not None:
+            val_str = str(cell.value)
+            cleaned_val = clean_address_string(val_str)
+            
+            if val_str != cleaned_val:
+                cell.value = cleaned_val
+                updated_count += 1
+                visual_old = val_str.replace('\r', '\\r').replace('\n', '\\n')
+                print(f"✅ {full_name} - Alamat dibersihkan: '{visual_old}' -> '{cleaned_val}'")
+                
+    if updated_count > 0:
+        wb.save(EXCEL_FILE)
+        print(f"\n✅ Berhasil membersihkan {updated_count} alamat.")
+        tulis_log(f"Pembersihan alamat: {updated_count} alamat berhasil dibersihkan dari karakter ilegal/enter")
+    else:
+        print("\n✅ Semua alamat sudah dalam format yang valid.")
+        
+    wb.close()
+    print("="*60 + "\n")

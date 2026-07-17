@@ -8,7 +8,7 @@ from utils import (
     safe_str, backup_excel, tulis_log, update_status_excel,
     safe_save_workbook, is_excel_locked
 )
-from postal import autofill_postal_codes_pre_upload, format_phone_numbers_in_excel, format_birthdates_in_excel
+from postal import autofill_postal_codes_pre_upload, format_phone_numbers_in_excel, format_birthdates_in_excel, clean_addresses_in_excel
 from api import build_files, upload_data, parse_api_response
 
 def tampilkan_ringkasan(data):
@@ -41,6 +41,7 @@ def main():
     autofill_postal_codes_pre_upload()
     format_phone_numbers_in_excel()
     format_birthdates_in_excel()
+    clean_addresses_in_excel()
     
     headers = {
         'Accept': 'application/json',
