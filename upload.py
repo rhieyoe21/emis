@@ -95,12 +95,39 @@ def main():
             if col.lower() == "upload_timestamp"
         )
     
+    # Hitung data yang belum di-upload dan valid
+    total_belum_upload = 0
+    for idx, row in df.iterrows():
+        nik = safe_str(row.get("nik"))
+        status = safe_str(row.get("status")).lower()
+        if len(nik) == 16 and nik.isdigit() and nik not in nik_duplikat_set and status in ["", "belum"]:
+            total_belum_upload += 1
+
+    if total_belum_upload == 0:
+        print("✅ Semua siswa sudah di-upload atau tidak ada data siswa baru yang valid.")
+        wb.close()
+        return
+
+    print(f"📊 Ditemukan {total_belum_upload} data siswa baru yang belum di-upload.")
+    limit_upload = total_belum_upload
+    while True:
+        limit_str = input(f"➡️ Batasi jumlah siswa yang di-upload? (1-{total_belum_upload}, tekan Enter untuk semua): ").strip()
+        if not limit_str:
+            break
+        if limit_str.isdigit():
+            val = int(limit_str)
+            if 1 <= val <= total_belum_upload:
+                limit_upload = val
+                break
+        print(f"❌ Input tidak valid. Masukkan angka antara 1 dan {total_belum_upload}.")
+
     jumlah_sukses = 0
     jumlah_gagal = 0
     jumlah_dilewati = 0
     jumlah_dilewati_tanggal = 0
     jumlah_dilewati_nik = 0
     jumlah_dilewati_duplikat = 0
+    jumlah_diupload = 0
 
     for idx, row in df.iterrows():
         nik = safe_str(row.get("nik"))
@@ -117,6 +144,11 @@ def main():
 
         if status not in ["", "belum"]:
             continue
+
+        # Cek limit upload
+        if jumlah_diupload >= limit_upload:
+            print(f"\n✋ Batas limit upload ({limit_upload} siswa) telah tercapai. Proses dihentikan.")
+            break
 
         print(f"\n🚀 Upload siswa ke-{idx+1}: {row['full_name']} (NIK: {nik})")
         files_and_file = build_files(row)
@@ -148,6 +180,8 @@ def main():
                 safe_save_workbook(wb, EXCEL_FILE)
         else:
             jumlah_gagal += 1
+
+        jumlah_diupload += 1
 
         if foto_file:
             foto_file.close()
