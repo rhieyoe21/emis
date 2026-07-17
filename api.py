@@ -38,7 +38,7 @@ def parse_api_response(response, full_name):
     except:
         return f"❌ {full_name} | Status {status} | Raw: {response.text[:200]}"
 
-def upload_data(files, headers, url, max_retry=3, timeout=120):
+def upload_data(files, headers, url, max_retry=3, timeout=45):
     last_error = None
     
     # Buat copy headers untuk menghindari modifikasi global
